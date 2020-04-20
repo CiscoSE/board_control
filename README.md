@@ -6,10 +6,12 @@
 
 **ToDo's:**
 
- - Push config to WebEx board to setup the xCommand instead of having
+ - Push config to WebEx Board to setup the xCommand instead of having
     a user do it through a different interface
 
  - Try this with another web-controlled plug
+ 
+ - Verify this works with other Cisco video endpoints
 
 ---
 
