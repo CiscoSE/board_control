@@ -1,3 +1,8 @@
+These samples are for version 0.1.0. Version 1.0.0 does not use the
+detailed JSON information from the board.
+
+---
+
 sample.json has the 3 different JSON messages from the WebEx board.
 
 You can test them against this with curl.
