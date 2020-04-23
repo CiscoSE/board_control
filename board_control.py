@@ -21,14 +21,13 @@ or implied.
 
 __author__ = "Eric Pylko"
 __email__ = "erpylko@cisco.com"
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
 
 from flask import Flask, request
 from pyHS100 import SmartPlug
 import json
-from dictor import dictor
 
 #
 # instantiate plug
@@ -56,11 +55,11 @@ app = Flask(__name__)
 #
 # In my use case, this is called from nginx. nginx is NOT a requirement
 #
-# This gets called every time data is POSTed to the app. That's why we
+# This gets called every time data is PUT to the app. That's why we
 # need global variables that are always available
 #
-@app.route('/',methods=['POST'])
-def index():
+@app.route('/',methods=['PUT'])
+def control_kasa():
   global incoming
   global hangups
   global plugstatus
@@ -81,43 +80,36 @@ def index():
     unanswered = 0
   
 #
-# get the data passed from nginx as JSON
+# get the data passed from nginx, take the value from the "Message" key
 #
-  req = request.get_json()
+  req = request.get_json()["Message"]
 
 #
-# Status.Call returns a JSON list, want to use it as a dict
+# Current messages are Toggle, Answered, and Hangup. These are sent
+# from the JS macro running on the board/codec
 #
-# see different JSON messages in the examples directory
-#
-  state = dictor(req,'Status.Call')[0]
-  
-#
-# The WebEx Board seems to send 3 messages for call status
-#   - AnswerState - Unanswered
-#   - AnswerState - Answered
-#   - ghost - True (this is when a call is over) 
-#
-  if (dictor(state,'AnswerState.Value')=="Unanswered"):
+  if (req == "Toggle"):
+    if (plug.state == "OFF"):
+      plug.turn_on()
+    else:
+      plug.turn_off()
+    return("200")
+  elif (req == "Answered"):
     incoming += 1
-  elif (dictor(state,'ghost')=="True"):
+  elif (req == "Hangup"):
     hangups += 1
-  elif (dictor(state,'AnswerState.Value')=="Answered"):
-# we don't care if the call was answered
-    return ("No change")
   else:
-    return ("Error")
-  
+    print ("Unhandled message: ", req)
+    return("200")
+
 # we have a new call, turn plug off
   if (incoming>hangups):
     plug.turn_off()
 # must be a hangup, set state back to whatever it was when
-# there were 0 calls
+# there were 0 calls. This also implies it ignores Toggle during a call
   else:
     plug.state = plugstatus
-
-#
-  return ("Done")
+  return ("200")
 
 if __name__ == '__main__':
   app.run(debug=False, host=HOSTIP, port=HOSTPORT)
