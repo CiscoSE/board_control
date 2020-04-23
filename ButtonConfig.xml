@@ -1,0 +1,13 @@
+<Extensions>
+  <Version>1.7</Version>
+  <Panel>
+    <Order>1</Order>
+    <PanelId>kasa</PanelId>
+    <Origin>local</Origin>
+    <Type>Statusbar</Type>
+    <Icon>Hvac</Icon>
+    <Color>#02BBCC</Color>
+    <Name>Toggle Heater</Name>
+    <ActivityType>Custom</ActivityType>
+  </Panel>
+</Extensions>
