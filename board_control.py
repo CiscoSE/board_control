@@ -21,25 +21,24 @@ or implied.
 
 __author__ = "Eric Pylko"
 __email__ = "erpylko@cisco.com"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
 
 from flask import Flask, request
 from pyHS100 import SmartPlug
-import json
 
 #
 # instantiate plug
 #
-PLUGIP="192.168.6.201"
-plug=SmartPlug(PLUGIP)
+PLUGIP = "192.168.6.201"
+plug = SmartPlug(PLUGIP)
 
 #
 # local IP address and port to listen on
 #
-HOSTIP="127.0.0.1"
-HOSTPORT=6000
+HOSTIP = "127.0.0.1"
+HOSTPORT = 7000
 
 #
 # turn off plug if starting up, just to have known state
@@ -58,58 +57,58 @@ app = Flask(__name__)
 # This gets called every time data is PUT to the app. That's why we
 # need global variables that are always available
 #
-@app.route('/',methods=['PUT'])
+@app.route('/', methods=['PUT'])
 def control_kasa():
-  global incoming
-  global hangups
-  global plugstatus
+    global incoming
+    global hangups
+    global plugstatus
 
 #
 # This must be a new/first call, i.e. no calls on board
 # so we want to store the state for what to do after
 # one or more calls arrive
 #
-  if (incoming == hangups):
-    plugstatus = plug.state
+    if incoming == hangups:
+        plugstatus = plug.state
 
 #
 # app must have started while in a call, set state back to normal
 #
-  if (hangups > incoming):
-    hangups = 0
-    unanswered = 0
-  
+    if hangups > incoming:
+        hangups = 0
+        incoming = 0
+
 #
 # get the data passed from nginx, take the value from the "Message" key
 #
-  req = request.get_json()["Message"]
+    req = request.get_json()["Message"]
 
 #
 # Current messages are Toggle, Answered, and Hangup. These are sent
 # from the JS macro running on the board/codec
 #
-  if (req == "Toggle"):
-    if (plug.state == "OFF"):
-      plug.turn_on()
+    if req == "Toggle":
+        if plug.state == "OFF":
+            plug.turn_on()
+        else:
+            plug.turn_off()
+        return "200"
+    elif req == "Answered":
+        incoming += 1
+    elif req == "Hangup":
+        hangups += 1
     else:
-      plug.turn_off()
-    return("200")
-  elif (req == "Answered"):
-    incoming += 1
-  elif (req == "Hangup"):
-    hangups += 1
-  else:
-    print ("Unhandled message: ", req)
-    return("200")
+        print ("Unhandled message: ", req)
+        return "200"
 
 # we have a new call, turn plug off
-  if (incoming>hangups):
-    plug.turn_off()
+    if incoming > hangups:
+        plug.turn_off()
 # must be a hangup, set state back to whatever it was when
 # there were 0 calls. This also implies it ignores Toggle during a call
-  else:
-    plug.state = plugstatus
-  return ("200")
+    else:
+        plug.state = plugstatus
+    return "200"
 
 if __name__ == '__main__':
-  app.run(debug=False, host=HOSTIP, port=HOSTPORT)
+    app.run(debug=False, host=HOSTIP, port=HOSTPORT)

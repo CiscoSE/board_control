@@ -1,3 +1,6 @@
+Version 1.0.1
+ - bug/variable fix
+ - code readability
 Version 1.0.0
  - eliminated the need for the CLI config. Using PUT from macro
  - moved Http Feedback to JS macro with events
